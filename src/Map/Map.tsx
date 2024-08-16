@@ -1,6 +1,6 @@
-import React, { useRef, useState, useEffect } from "react"
+import React, { useRef, useEffect, useState } from "react"
 import "./Map.css";
-import MapContext from "./MapContext";
+import { useMapContext } from "./MapContext";
 import * as ol from "ol";
 import { Coordinate } from "ol/coordinate";
 import View from "ol/View";
@@ -13,43 +13,45 @@ interface MapProps {
 
 export const Map: React.FC<MapProps> = ({ children, zoom, center }) => {
     const mapRef = useRef<HTMLDivElement>(null);
-    const [map, setMap] = useState<ol.Map | null>(null);
+    const { setMap, setIsMapReady } = useMapContext();
+    const [map, setLocalMap] = useState<ol.Map | null>(null);
 
     useEffect(() => {
-        if (!mapRef.current) return;
+        if (mapRef.current) {
+            const view = new View({ zoom, center });
 
-        const view = new View({ zoom, center });
+            const mapObject = new ol.Map({
+                view: view,
+                layers: [],
+                controls: [],
+                overlays: [],
+            });
 
-        let mapObject = new ol.Map({
-            view: view,
-            layers: [],
-            controls: [],
-            overlays: []
-        })
+            mapObject.setTarget(mapRef.current);
+            setLocalMap(mapObject);
+            setMap(mapObject);
+            setIsMapReady(true);
 
-        mapObject.setTarget(mapRef.current);
-        setMap(mapObject);
+            console.log('Mapa inicializando');
 
-        return () => mapObject.setTarget(undefined);
-    }, [ zoom, center ]);
+            return () => {
+                console.log('Mapa desmontando');
+                mapObject.setTarget(undefined);
+                setIsMapReady(false);
+            };
+        }
+    }, [zoom, center, setMap, setIsMapReady]);
 
     useEffect(() => {
         if (map) {
             map.getView().setZoom(zoom);
-        }
-    }, [zoom, map]);
-
-    useEffect(() => {
-        if (map) {
             map.getView().setCenter(center);
         }
-    }, [center, map]);
+    }, [zoom, center, map]);
 
     return (
-        <MapContext.Provider value={{ map, setMap }}>
-            <div ref={mapRef} className="ol-map">
-                {children}
-            </div>
-        </MapContext.Provider>
+        <div ref={mapRef} className="ol-map">
+            {children}
+        </div>
     )
 }

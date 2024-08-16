@@ -1,37 +1,36 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useState } from 'react';
 import * as ol from "ol"
 
 // Definir tipo do valor do contexto
 interface MapContextType {
     map: ol.Map | null;
     setMap: (map: ol.Map | null ) => void; 
+    isMapReady: boolean;
+    setIsMapReady: (isMapReady: boolean) => void;
 }
-
-// Valor padrao do contexto
-const defaultValue: MapContextType = {
-    map: null,
-    setMap: () => {},
-};
 
 // Criar o contexto
-const MapContext = createContext<MapContextType>(defaultValue);
-
-interface MapProviderProps {
-    children: ReactNode;
-}
+const MapContext = createContext<MapContextType | undefined>(undefined);
 
 // Cirar provedor pra contexto
-export const MapProvider: React.FC<MapProviderProps> = ({ children }) => {
-    const [map, setMap] = React.useState<ol.Map | null>(null);
+export const MapProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const [map, setMap] = useState<ol.Map | null>(null);
+    const [isMapReady, setIsMapReady] = useState<boolean>(false);
 
     return (
-        <MapContext.Provider value={{ map, setMap }}>
+        <MapContext.Provider value={{ map, setMap, isMapReady, setIsMapReady }}>
             {children}
         </MapContext.Provider>
     );
 };
 
-export const useMapContext = () => useContext(MapContext);
+export const useMapContext = () => {
+    const context = useContext(MapContext);
+    if (!context) {
+        throw new Error('useMapContext must be used within a MapProvider');
+    }
+    return context;
+}
 
 export default MapContext;
 

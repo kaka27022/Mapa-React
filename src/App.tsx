@@ -1,5 +1,5 @@
-import React from 'react';
-import { MapProvider } from './Map/MapContext'; // Corrija o caminho se necessário
+import React, { useState } from 'react';
+import { MapProvider, useMapContext } from './Map/MapContext'; 
 import { Map } from './Map/Map';
 import { Layers } from './Layers/Layers';
 import { TileLayers } from './Layers/TileLayer';
@@ -12,9 +12,63 @@ import { OSM, Vector } from 'ol/source';
 import GeoJSON from 'ol/format/GeoJSON';
 import { Style, Circle as CircleStyle, Fill, Stroke } from 'ol/style';
 import "./App.css";
+import { geocode } from './geocode';
+import createRoute from './drawRoute';
+
+const MapComponents: React.FC = () => {
+    const { map, isMapReady } = useMapContext();
+    const [origin, setOrigin] = useState<string>('');
+    const [destination, setDestination] = useState<string>('');
+
+    const handleCreateRoute = async () => {
+        if (!isMapReady || !map) {
+            alert('O mapa não está disponível.');
+            return;
+        }
+
+        const originCoords = await geocode(origin);
+        const destinationCoords = await geocode(destination);
+
+        console.log("Origem:", originCoords);
+        console.log("Destino:", destinationCoords);
+
+        if (originCoords && destinationCoords) {
+            const routeStartCoords = fromLonLat(originCoords) as [number, number];
+            const routeEndCoords = fromLonLat(destinationCoords) as [number, number];
+
+            createRoute(map, routeStartCoords, routeEndCoords);
+        } else {
+            alert('Endereços não encontrados.');
+        }
+    }
+
+    return (
+        <>
+            <WhiteRectangle>
+                <StyledH1>Origem:</StyledH1>
+                <InputField
+                    type='text'
+                    value={origin}
+                    onChange={(e) => setOrigin(e.target.value)}
+                    placeholder='Digite o local de origem'
+                />
+
+                <StyledH1>Destino:</StyledH1>
+                <InputField
+                    type='text'
+                    value={destination}
+                    onChange={(e) => setDestination(e.target.value)}
+                    placeholder='Digite o local de destino'
+                />
+
+                <button onClick={handleCreateRoute}>Criar Rota</button>
+            </WhiteRectangle>
+        </>
+    );
+}
 
 function App() {
-    const center = fromLonLat([-43.5300, -20.3833]); // São Paulo, BR
+    const center = fromLonLat([-43.5300, -20.3833]); 
     const zoom = 12;
 
     const vectorSource = new Vector({
@@ -43,28 +97,20 @@ function App() {
 
     return (
         <MapProvider>
-          <WhiteRectangle>
-              <StyledH1>Origem:</StyledH1>
-              <InputField type="text" placeholder="Digite o local de origem" />
-
-              <StyledH1>Destino:</StyledH1>
-              <InputField type="text" placeholder="Digite o local de destino" />
-          </WhiteRectangle>
-
-          <div style={{ height: '500px', width: '100%' }}>
-              <Map zoom={zoom} center={center}>
-                  <Controls>
-                      <FullScreenControl />
-                  </Controls>
-                  <Layers>
-                      <TileLayers source={new OSM()} />
-                      <VectorLayer source={vectorSource} style={pointStyle} />
-                  </Layers>
-              </Map>
-          </div>
+            <MapComponents />
+            <div style={{ height: '500px', width: '100%' }}>
+                <Map zoom={zoom} center={center}>
+                    <Controls>
+                        <FullScreenControl />
+                    </Controls>
+                    <Layers>
+                        <TileLayers source={new OSM()} />
+                        <VectorLayer source={vectorSource} style={pointStyle} />
+                    </Layers>
+                </Map>
+            </div>
         </MapProvider>
     );
 }
 
 export default App;
-
