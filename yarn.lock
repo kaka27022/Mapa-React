@@ -1191,6 +1191,11 @@ ol@^10.0.0:
     pbf "4.0.1"
     rbush "^4.0.0"
 
+openrouteservice-js@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.npmjs.org/openrouteservice-js/-/openrouteservice-js-0.4.1.tgz"
+  integrity sha512-Oeb/KgzaYXEtafSHB40KfZvHFfTSPhtt0/oEf0jv5o5Ljw3//+C63CFxbknOqDBrOkYLLQMMCjJGa54rUOBtLg==
+
 optionator@^0.9.3:
   version "0.9.4"
   resolved "https://registry.npmjs.org/optionator/-/optionator-0.9.4.tgz"

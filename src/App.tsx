@@ -33,10 +33,7 @@ const MapComponents: React.FC = () => {
         console.log("Destino:", destinationCoords);
 
         if (originCoords && destinationCoords) {
-            const routeStartCoords = fromLonLat(originCoords) as [number, number];
-            const routeEndCoords = fromLonLat(destinationCoords) as [number, number];
-
-            createRoute(map, routeStartCoords, routeEndCoords);
+            createRoute(map, originCoords, destinationCoords);
         } else {
             alert('Endereços não encontrados.');
         }
@@ -114,3 +111,4 @@ function App() {
 }
 
 export default App;
+
