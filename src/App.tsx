@@ -42,7 +42,6 @@ const MapComponents: React.FC = () => {
         console.log("Destino:", destinationCoords);
 
         if (originCoords && destinationCoords) {
-            // Converta coordenadas para o formato esperado pelo OpenLayers
             const routeStartCoords = fromLonLat(originCoords) as [number, number];
             const routeEndCoords = fromLonLat(destinationCoords) as [number, number];
 
@@ -54,23 +53,19 @@ const MapComponents: React.FC = () => {
                 features: [
                     new Feature({
                         geometry: new Point(routeStartCoords),
-                        // Utilize o estilo de marcador vermelho para a origem
                         style: createMarkerStyle('red'),
                     }),
                     new Feature({
                         geometry: new Point(routeEndCoords),
-                        // Utilize o estilo de marcador azul para o destino
                         style: createMarkerStyle('blue'),
                     }),
                 ],
             });
 
-            // Cria a camada de vetor para os marcadores
             const markerLayer = new VectorLayer({
                 source: vectorSource,
             });
 
-            // Adiciona a camada de marcadores ao mapa
             map.addLayer(markerLayer);
         } else {
             alert('Endereços não encontrados.');
