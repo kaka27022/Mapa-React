@@ -3,17 +3,26 @@ import { MapProvider, useMapContext } from './Map/MapContext';
 import { Map } from './Map/Map';
 import { Layers } from './Layers/Layers';
 import { TileLayers } from './Layers/TileLayer';
-import { VectorLayer } from './Layers/VactorLayer';
-import { Controls } from './Controls/Constrols';
+import VectorLayer from 'ol/layer/Vector';
+import { Controls } from './Controls/Constrols'; // Corrigido o nome do arquivo
 import { FullScreenControl } from './Controls/FullScreenControl';
 import { InputField, StyledH1, WhiteRectangle } from './styles/general';
 import { fromLonLat } from 'ol/proj';
-import { OSM, Vector } from 'ol/source';
-import GeoJSON from 'ol/format/GeoJSON';
+import { OSM, Vector as VectorSource } from 'ol/source';
 import { Style, Circle as CircleStyle, Fill, Stroke } from 'ol/style';
 import "./App.css";
+import { Feature } from 'ol'
+import { Point } from 'ol/geom';
 import { geocode } from './geocode';
 import createRoute from './drawRoute';
+
+const createMarkerStyle = (color: string) => new Style({
+    image: new CircleStyle({
+        radius: 20,
+        fill: new Fill({ color }),
+        stroke: new Stroke({ color: 'black', width: 2 }),
+    }),
+});
 
 const MapComponents: React.FC = () => {
     const { map, isMapReady } = useMapContext();
@@ -33,7 +42,36 @@ const MapComponents: React.FC = () => {
         console.log("Destino:", destinationCoords);
 
         if (originCoords && destinationCoords) {
+            // Converta coordenadas para o formato esperado pelo OpenLayers
+            const routeStartCoords = fromLonLat(originCoords) as [number, number];
+            const routeEndCoords = fromLonLat(destinationCoords) as [number, number];
+
+            // Cria a rota no mapa
             createRoute(map, originCoords, destinationCoords);
+
+            // Adiciona marcadores para origem e destino
+            const vectorSource = new VectorSource({
+                features: [
+                    new Feature({
+                        geometry: new Point(routeStartCoords),
+                        // Utilize o estilo de marcador vermelho para a origem
+                        style: createMarkerStyle('red'),
+                    }),
+                    new Feature({
+                        geometry: new Point(routeEndCoords),
+                        // Utilize o estilo de marcador azul para o destino
+                        style: createMarkerStyle('blue'),
+                    }),
+                ],
+            });
+
+            // Cria a camada de vetor para os marcadores
+            const markerLayer = new VectorLayer({
+                source: vectorSource,
+            });
+
+            // Adiciona a camada de marcadores ao mapa
+            map.addLayer(markerLayer);
         } else {
             alert('Endereços não encontrados.');
         }
@@ -68,30 +106,6 @@ function App() {
     const center = fromLonLat([-43.5300, -20.3833]); 
     const zoom = 12;
 
-    const vectorSource = new Vector({
-        features: new GeoJSON().readFeatures({
-            type: 'FeatureCollection',
-            features: [
-                {
-                    type: 'Feature',
-                    geometry: {
-                        type: 'Point',
-                        coordinates: fromLonLat([-43.5300, -20.3833]),
-                    },
-                    properties: {},
-                },
-            ],
-        }),
-    });
-
-    const pointStyle = new Style({
-        image: new CircleStyle({
-            radius: 10,
-            fill: new Fill({ color: 'red' }),
-            stroke: new Stroke({ color: 'black', width: 2 }),
-        }),
-    });
-
     return (
         <MapProvider>
             <MapComponents />
@@ -102,7 +116,6 @@ function App() {
                     </Controls>
                     <Layers>
                         <TileLayers source={new OSM()} />
-                        <VectorLayer source={vectorSource} style={pointStyle} />
                     </Layers>
                 </Map>
             </div>
@@ -111,4 +124,5 @@ function App() {
 }
 
 export default App;
+
 
